@@ -25,23 +25,28 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
             width: 100%;
-            padding: 2rem;
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem 0;
+            margin-bottom: 1.5rem;
+            padding: 1rem 0;
             background: var(--gray);
             border-radius: 4px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             color: var(--primary);
             margin-bottom: 0.5rem;
         }
@@ -50,13 +55,13 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .stat-card {
             background: var(--gray);
             border-radius: 4px;
-            padding: 2rem;
+            padding: 1rem;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s ease;
@@ -68,24 +73,27 @@
 
         .stat-card h3 {
             color: var(--primary);
-            font-size: 1.2rem;
+            font-size: 1rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .stat-card .number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
         }
 
         .table-container {
             background: var(--gray);
             border-radius: 4px;
-            padding: 1.5rem;
+            padding: 1rem;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             margin: 0;
             width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         table {
@@ -94,7 +102,7 @@
         }
 
         th, td {
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid var(--gray-light);
         }
@@ -116,6 +124,39 @@
             border-bottom: none;
         }
 
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+        }
+
+        .pagination button {
+            background: var(--gray-light);
+            color: var(--light);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pagination button:hover {
+            background: var(--primary);
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+        }
+
+        .pagination button:disabled {
+            background: var(--gray-light);
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -130,7 +171,7 @@
             }
 
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.75rem;
             }
         }
     </style>
@@ -170,40 +211,54 @@
                 </thead>
                 <tbody id="usageBody"></tbody>
             </table>
+            <div class="pagination" id="pagination"></div>
         </div>
     </div>
 
     <script>
-        fetch('/usage')
-            .then(response => response.json())
-            .then(data => {
-                const tbody = document.getElementById('usageBody');
-                
-                // Calculate statistics
-                const uniqueUsers = new Set(data.map(row => row.userId)).size;
-                const totalChecks = data.length;
-                const successfulChecks = data.filter(row => row.result === 'success').length;
-                const successRate = ((successfulChecks / totalChecks) * 100).toFixed(1);
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let totalPages = 1;
+        let allData = [];
 
-                // Update statistics cards
-                document.getElementById('totalUsers').textContent = uniqueUsers;
-                document.getElementById('totalChecks').textContent = totalChecks;
-                document.getElementById('successRate').textContent = `${successRate}%`;
+        function displayPage(page) {
+            const tbody = document.getElementById('usageBody');
+            tbody.innerHTML = '';
+            
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const pageData = allData.slice(start, end);
 
-                // Populate table
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.userId}</td>
-                        <td>${row.username}</td>
-                        <td>${new Date(row.timestamp).toLocaleString()}</td>
-                        <td>${row.number}</td>
-                        <td>${row.result}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            })
-            .catch(error => console.error('Error fetching usage:', error));
-    </script>
-</body>
-</html>
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.userId}</td>
+                    <td>${row.username}</td>
+                    <td>${new Date(row.timestamp).toLocaleString()}</td>
+                    <td>${row.number}</td>
+                    <td>${row.result}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '←';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayPage(currentPage);
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
