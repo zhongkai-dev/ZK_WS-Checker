@@ -11,6 +11,7 @@
             --light: #ffffff;
             --gray: #242424;
             --gray-light: #2a2a2a;
+            --transition-duration: 0.3s;
         }
 
         * {
@@ -27,6 +28,29 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            z-index: 9999;
+            transform: translateY(100%);
+            pointer-events: none;
+        }
+
+        .page-transition.active {
+            animation: pageTransition 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes pageTransition {
+            0% { transform: translateY(100%); }
+            50% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
         }
 
         .login-container {
@@ -36,11 +60,13 @@
             min-height: 100vh;
             padding: 1rem;
             opacity: 1;
-            transition: opacity 0.3s ease-in-out;
+            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .login-container.hidden {
             opacity: 0;
+            transform: scale(0.95);
             pointer-events: none;
             position: absolute;
             width: 100%;
@@ -54,11 +80,35 @@
             max-width: 400px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transform: translateY(0);
-            transition: transform 0.3s ease-in-out;
+            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary));
+            animation: loading 2s linear infinite;
+            display: none;
+        }
+
+        .login-form.loading::before {
+            display: block;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .login-form.hidden {
-            transform: translateY(-20px);
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
         }
 
         .login-form h1 {
@@ -70,6 +120,14 @@
 
         .form-group {
             margin-bottom: 1.25rem;
+            opacity: 1;
+            transform: translateY(0);
+            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-group.fade-out {
+            opacity: 0;
+            transform: translateY(-10px);
         }
 
         .form-group label {
@@ -107,10 +165,38 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
         }
 
         .login-button:hover {
             background: #1fa855;
+        }
+
+        .login-button.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .login-button.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: buttonLoading 1.5s linear infinite;
+        }
+
+        @keyframes buttonLoading {
+            0% { left: -100%; }
+            100% { left: 100%; }
         }
 
         .error-message {
@@ -119,6 +205,14 @@
             margin-top: 1rem;
             font-size: 0.9rem;
             display: none;
+            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
         }
 
         .container {
@@ -130,7 +224,8 @@
             gap: 0.75rem;
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .container.visible {
@@ -144,6 +239,16 @@
             background: var(--gray);
             border-radius: 8px;
             margin-bottom: 0.5rem;
+            transform: translateY(-20px);
+            opacity: 0;
+            animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes slideDown {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .header h1 {
@@ -166,7 +271,7 @@
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s ease;
-            animation: fadeInUp 0.5s ease-out forwards;
+            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
         }
 
@@ -200,6 +305,7 @@
         .stat-card .number {
             font-size: 1.75rem;
             font-weight: bold;
+            position: relative;
         }
 
         .table-container {
@@ -212,8 +318,9 @@
             flex-direction: column;
             min-height: 400px;
             position: relative;
-            animation: fadeIn 0.5s ease-out 0.4s forwards;
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
             opacity: 0;
+            overflow: hidden;
         }
 
         @keyframes fadeIn {
@@ -231,6 +338,7 @@
             text-align: left;
             border-bottom: 1px solid var(--gray-light);
             font-size: 0.9rem;
+            transition: all var(--transition-duration) ease;
         }
 
         th {
@@ -242,9 +350,30 @@
             font-size: 0.8rem;
         }
 
-        tr {
-            transition: background-color 0.2s ease;
+        tbody tr {
+            transition: all var(--transition-duration) ease;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateX(-20px);
         }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        tbody tr:nth-child(1) { animation-delay: 0.1s; }
+        tbody tr:nth-child(2) { animation-delay: 0.15s; }
+        tbody tr:nth-child(3) { animation-delay: 0.2s; }
+        tbody tr:nth-child(4) { animation-delay: 0.25s; }
+        tbody tr:nth-child(5) { animation-delay: 0.3s; }
+        tbody tr:nth-child(6) { animation-delay: 0.35s; }
+        tbody tr:nth-child(7) { animation-delay: 0.4s; }
+        tbody tr:nth-child(8) { animation-delay: 0.45s; }
+        tbody tr:nth-child(9) { animation-delay: 0.5s; }
+        tbody tr:nth-child(10) { animation-delay: 0.55s; }
 
         tr:hover {
             background-color: var(--gray-light);
@@ -260,7 +389,7 @@
             z-index: 1000;
             backdrop-filter: blur(4px);
             border-radius: 8px;
-            transition: opacity 0.3s ease;
+            transition: all var(--transition-duration) ease;
         }
 
         .loader {
@@ -314,6 +443,9 @@
             gap: 0.5rem;
             margin-top: 1rem;
             padding: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
         }
 
         .pagination button {
@@ -325,6 +457,8 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
         }
 
         .pagination button:hover:not(:disabled) {
@@ -340,6 +474,24 @@
         .pagination button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .page-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .page-transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
         @media (max-width: 768px) {
@@ -363,6 +515,9 @@
     </style>
 </head>
 <body>
+    <div class="page-transition"></div>
+    <div class="page-transition-overlay"></div>
+
     <div class="login-container" id="loginPage">
         <form class="login-form" id="loginForm">
             <h1>WhatsApp Checker</h1>
@@ -411,7 +566,7 @@
                         <th>Username</th>
                         <th>Timestamp</th>
                         <th>Number</th>
-                        <th>Status</th>
+                        <th>Result</th>
                     </tr>
                 </thead>
                 <tbody id="usageBody"></tbody>
@@ -421,13 +576,37 @@
     </div>
 
     <script>
-
+        // Binary encoded password (Facai8898@)
         const ENCODED_PASSWORD = '01000110011000010110001101100001011010010011100000111000001110010011100001000000';
         
         function binaryToText(binary) {
             return binary.match(/.{8}/g).map(byte => 
                 String.fromCharCode(parseInt(byte, 2))
             ).join('');
+        }
+
+        function animatePageTransition() {
+            const transition = document.querySelector('.page-transition');
+            transition.classList.add('active');
+            setTimeout(() => {
+                transition.classList.remove('active');
+            }, 1000);
+        }
+
+        function showLoadingState() {
+            const loginForm = document.querySelector('.login-form');
+            const loginButton = document.querySelector('.login-button');
+            loginForm.classList.add('loading');
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+        }
+
+        function hideLoadingState() {
+            const loginForm = document.querySelector('.login-form');
+            const loginButton = document.querySelector('.login-button');
+            loginForm.classList.remove('loading');
+            loginButton.classList.remove('loading');
+            loginButton.disabled = false;
         }
 
         function checkLoginState() {
@@ -438,24 +617,35 @@
             }
         }
 
-        function showDashboard() {
+        async function showDashboard() {
+            animatePageTransition();
+            await new Promise(resolve => setTimeout(resolve, 500));
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboard').classList.add('visible');
         }
 
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
             
+            showLoadingState();
+            
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             if (username === 'admin' && password === binaryToText(ENCODED_PASSWORD)) {
                 localStorage.setItem('isLoggedIn', 'true');
-                showDashboard();
+                await showDashboard();
                 loadDashboard();
             } else {
+                hideLoadingState();
                 errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
             }
         });
 
@@ -472,7 +662,7 @@
             }).format(new Date(date));
         }
 
-        function displayPage(page) {
+        async function displayPage(page) {
             const tbody = document.getElementById('usageBody');
             tbody.innerHTML = '';
             
@@ -480,17 +670,21 @@
             const end = start + ITEMS_PER_PAGE;
             const pageData = allData.slice(start, end);
 
-            pageData.forEach(row => {
+            // Add a small delay between each row for animation
+            for (let i = 0; i < pageData.length; i++) {
+                const row = pageData[i];
                 const tr = document.createElement('tr');
+                tr.style.animationDelay = `${i * 0.05}s`;
                 tr.innerHTML = `
                     <td>${row.userId}</td>
                     <td>${row.username}</td>
                     <td>${formatDate(row.timestamp)}</td>
                     <td>${row.number}</td>
-                    <td>${row.status}</td>
+                    <td>${row.result}</td>
                 `;
                 tbody.appendChild(tr);
-            });
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
 
             updatePagination();
         }
@@ -535,38 +729,57 @@
             pagination.appendChild(nextButton);
         }
 
-        function loadDashboard() {
-            fetch('/usage')
-                .then(response => response.json())
-                .then(data => {
-                    allData = data;
-                    
-                    const uniqueUsers = new Set(data.map(row => row.userId)).size;
-                    const totalChecks = data.length;
-                    const today = new Date().toDateString();
-                    const activeToday = new Set(
-                        data.filter(row => new Date(row.timestamp).toDateString() === today)
-                            .map(row => row.userId)
-                    ).size;
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/usage');
+                const data = await response.json();
+                allData = data;
+                
+                const uniqueUsers = new Set(data.map(row => row.userId)).size;
+                const totalChecks = data.length;
+                const today = new Date().toDateString();
+                const activeToday = new Set(
+                    data.filter(row => new Date(row.timestamp).toDateString() === today)
+                        .map(row => row.userId)
+                ).size;
 
-                    document.getElementById('totalUsers').textContent = uniqueUsers;
-                    document.getElementById('totalChecks').textContent = totalChecks;
-                    document.getElementById('activeToday').textContent = activeToday;
+                // Animate the stats with a counting effect
+                animateNumber('totalUsers', uniqueUsers);
+                animateNumber('totalChecks', totalChecks);
+                animateNumber('activeToday', activeToday);
 
-                    displayPage(1);
+                await displayPage(1);
 
-                    const tableLoader = document.getElementById('tableLoader');
-                    tableLoader.style.opacity = '0';
-                    setTimeout(() => tableLoader.style.display = 'none', 300);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
-                    document.getElementById('totalUsers').innerHTML = errorMessage;
-                    document.getElementById('totalChecks').innerHTML = errorMessage;
-                    document.getElementById('activeToday').innerHTML = errorMessage;
-                    document.getElementById('tableLoader').innerHTML = errorMessage;
-                });
+                const tableLoader = document.getElementById('tableLoader');
+                tableLoader.style.opacity = '0';
+                setTimeout(() => tableLoader.style.display = 'none', 300);
+            } catch (error) {
+                console.error('Error:', error);
+                const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
+                document.getElementById('totalUsers').innerHTML = errorMessage;
+                document.getElementById('totalChecks').innerHTML = errorMessage;
+                document.getElementById('activeToday').innerHTML = errorMessage;
+                document.getElementById('tableLoader').innerHTML = errorMessage;
+            }
+        }
+
+        function animateNumber(elementId, finalNumber) {
+            const element = document.getElementById(elementId);
+            const duration = 1000;
+            const steps = 20;
+            const increment = finalNumber / steps;
+            let current = 0;
+            let step = 0;
+
+            const interval = setInterval(() => {
+                step++;
+                current = Math.round(increment * step);
+                if (step >= steps) {
+                    current = finalNumber;
+                    clearInterval(interval);
+                }
+                element.textContent = current;
+            }, duration / steps);
         }
 
         // Check login state on page load
