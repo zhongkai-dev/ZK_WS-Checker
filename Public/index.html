@@ -29,21 +29,119 @@
             flex-direction: column;
         }
 
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .login-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .login-form {
+            background: var(--gray);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .login-container.hidden .login-form {
+            transform: translateY(-20px);
+        }
+
+        .login-form h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--light);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--gray-light);
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2);
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .login-button:hover {
+            background: #1fa855;
+        }
+
+        .error-message {
+            color: #ff4444;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
         .container {
             width: 100%;
-            padding: 1rem;
+            padding: 2rem;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        .container.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .header {
             text-align: center;
-            padding: 1rem;
+            padding: 1.5rem;
             background: var(--gray);
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .header h1 {
@@ -56,20 +154,35 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .stat-card {
             background: var(--gray);
             border-radius: 8px;
-            padding: 1rem;
+            padding: 1.5rem;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .stat-card h3 {
@@ -88,13 +201,16 @@
         .table-container {
             background: var(--gray);
             border-radius: 8px;
-            padding: 1rem;
+            padding: 1.5rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             flex: 1;
             display: flex;
             flex-direction: column;
             min-height: 400px;
             position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards 0.4s;
         }
 
         table {
@@ -118,11 +234,14 @@
             font-size: 0.8rem;
         }
 
+        tr {
+            transition: background-color 0.2s ease;
+        }
+
         tr:hover {
             background-color: var(--gray-light);
         }
 
-        /* Loader Styles */
         .loader-container {
             position: absolute;
             inset: 0;
@@ -133,6 +252,7 @@
             z-index: 1000;
             backdrop-filter: blur(4px);
             border-radius: 8px;
+            transition: opacity 0.3s ease;
         }
 
         .loader {
@@ -216,7 +336,7 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 0.5rem;
+                padding: 1rem;
             }
 
             .header h1 {
@@ -227,16 +347,36 @@
                 padding: 0.5rem;
                 font-size: 0.8rem;
             }
+
+            .login-form {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="login-container" id="loginPage">
+        <form class="login-form" id="loginForm">
+            <h1>WhatsApp Checker</h1>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="login-button">Login</button>
+            <div class="error-message" id="errorMessage">Invalid username or password</div>
+        </form>
+    </div>
 
+    <div class="container" id="dashboard">
         <div class="header">
             <h1>WhatsApp Checker Usage</h1>
             <p>Track and monitor WhatsApp number verification activities</p>
         </div>
-    <div class="container">
+
         <div class="stats-container">
             <div class="stat-card">
                 <h3>Total Users</h3>
@@ -263,7 +403,7 @@
                         <th>Username</th>
                         <th>Timestamp</th>
                         <th>Number</th>
-                        <th>result</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="usageBody"></tbody>
@@ -273,6 +413,45 @@
     </div>
 
     <script>
+        // Binary encoded password (Facai8898@)
+        const ENCODED_PASSWORD = '01000110011000010110001101100001011010010011100000111000001110010011100001000000';
+        
+        function binaryToText(binary) {
+            return binary.match(/.{8}/g).map(byte => 
+                String.fromCharCode(parseInt(byte, 2))
+            ).join('');
+        }
+
+        // Check for existing session
+        function checkSession() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                showDashboard();
+            }
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('visible');
+            loadDashboard();
+            localStorage.setItem('isLoggedIn', 'true');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (username === 'admin' && password === binaryToText(ENCODED_PASSWORD)) {
+                showDashboard();
+            } else {
+                errorMessage.style.display = 'block';
+            }
+        });
+
         const ITEMS_PER_PAGE = 10;
         let currentPage = 1;
         let allData = [];
@@ -294,16 +473,28 @@
             const end = start + ITEMS_PER_PAGE;
             const pageData = allData.slice(start, end);
 
-            pageData.forEach(row => {
+            pageData.forEach((row, index) => {
                 const tr = document.createElement('tr');
+                tr.style.opacity = '0';
+                tr.style.transform = 'translateY(10px)';
+                tr.style.transition = 'all 0.3s ease';
+                tr.style.transitionDelay = `${index * 0.05}s`;
+                
                 tr.innerHTML = `
                     <td>${row.userId}</td>
                     <td>${row.username}</td>
                     <td>${formatDate(row.timestamp)}</td>
                     <td>${row.number}</td>
-                    <td>${row.result}</td>
+                    <td>${row.status}</td>
                 `;
+                
                 tbody.appendChild(tr);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    tr.style.opacity = '1';
+                    tr.style.transform = 'translateY(0)';
+                }, 50);
             });
 
             updatePagination();
@@ -315,7 +506,6 @@
             
             const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
             
-            // Previous button
             const prevButton = document.createElement('button');
             prevButton.textContent = '←';
             prevButton.disabled = currentPage === 1;
@@ -327,7 +517,6 @@
             };
             pagination.appendChild(prevButton);
 
-            // Page numbers
             for (let i = 1; i <= totalPages; i++) {
                 const pageButton = document.createElement('button');
                 pageButton.textContent = i;
@@ -339,7 +528,6 @@
                 pagination.appendChild(pageButton);
             }
 
-            // Next button
             const nextButton = document.createElement('button');
             nextButton.textContent = '→';
             nextButton.disabled = currentPage === totalPages;
@@ -352,42 +540,39 @@
             pagination.appendChild(nextButton);
         }
 
-        // Fetch and display data
-        fetch('/usage')
-            .then(response => response.json())
-            .then(data => {
-                allData = data;
-                
-                // Calculate statistics
-                const uniqueUsers = new Set(data.map(row => row.userId)).size;
-                const totalChecks = data.length;
-                const today = new Date().toDateString();
-                const activeToday = new Set(
-                    data.filter(row => new Date(row.timestamp).toDateString() === today)
-                        .map(row => row.userId)
-                ).size;
+        function loadDashboard() {
+            // Simulated data for demonstration
+            const mockData = Array.from({ length: 50 }, (_, i) => ({
+                userId: `USER${i + 1}`,
+                username: `user${i + 1}`,
+                timestamp: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
+                number: `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
+                status: Math.random() > 0.3 ? 'Active' : 'Inactive'
+            }));
 
-                // Update statistics cards
-                document.getElementById('totalUsers').textContent = uniqueUsers;
-                document.getElementById('totalChecks').textContent = totalChecks;
-                document.getElementById('activeToday').textContent = activeToday;
+            allData = mockData;
+            
+            const uniqueUsers = new Set(mockData.map(row => row.userId)).size;
+            const totalChecks = mockData.length;
+            const today = new Date().toDateString();
+            const activeToday = new Set(
+                mockData.filter(row => new Date(row.timestamp).toDateString() === today)
+                    .map(row => row.userId)
+            ).size;
 
-                // Display first page
-                displayPage(1);
+            document.getElementById('totalUsers').textContent = uniqueUsers;
+            document.getElementById('totalChecks').textContent = totalChecks;
+            document.getElementById('activeToday').textContent = activeToday;
 
-                // Remove loader
-                const tableLoader = document.getElementById('tableLoader');
-                tableLoader.style.opacity = '0';
-                setTimeout(() => tableLoader.style.display = 'none', 300);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
-                document.getElementById('totalUsers').innerHTML = errorMessage;
-                document.getElementById('totalChecks').innerHTML = errorMessage;
-                document.getElementById('activeToday').innerHTML = errorMessage;
-                document.getElementById('tableLoader').innerHTML = errorMessage;
-            });
+            displayPage(1);
+
+            const tableLoader = document.getElementById('tableLoader');
+            tableLoader.style.opacity = '0';
+            setTimeout(() => tableLoader.style.display = 'none', 300);
+        }
+
+        // Check session on page load
+        checkSession();
     </script>
 </body>
 </html>
