@@ -6,11 +6,11 @@
     <title>WhatsApp Checker Usage</title>
     <style>
         :root {
-            --primary: #128C7E;
-            --dark: #111111;
+            --primary: #25D366;
+            --dark: #1a1a1a;
             --light: #ffffff;
-            --gray: #1E1E1E;
-            --gray-light: #333;
+            --gray: #242424;
+            --gray-light: #2a2a2a;
         }
 
         * {
@@ -25,40 +25,46 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
             width: 100%;
-            padding: 2rem;
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem 0;
+            padding: 1rem;
             background: var(--gray);
-            border-radius: 4px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
         }
 
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 1.75rem;
             color: var(--primary);
             margin-bottom: 0.5rem;
         }
 
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
 
         .stat-card {
             background: var(--gray);
-            border-radius: 4px;
-            padding: 2rem;
+            border-radius: 8px;
+            padding: 1rem;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s ease;
         }
 
@@ -68,26 +74,27 @@
 
         .stat-card h3 {
             color: var(--primary);
-            font-size: 1.2rem;
+            font-size: 0.9rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .stat-card .number {
-            font-size: 2.5rem;
+            font-size: 1.75rem;
             font-weight: bold;
         }
 
         .table-container {
             background: var(--gray);
-            border-radius: 4px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            margin: 0;
-            width: 100%;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 400px;
             position: relative;
-            min-height: 300px;
         }
 
         table {
@@ -96,74 +103,74 @@
         }
 
         th, td {
-            padding: 1rem;
+            padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid var(--gray-light);
+            font-size: 0.9rem;
         }
 
         th {
-            background-color: rgba(18, 140, 126, 0.1);
+            background-color: var(--gray-light);
             color: var(--primary);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         tr:hover {
-            background-color: rgba(18, 140, 126, 0.05);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
+            background-color: var(--gray-light);
         }
 
         /* Loader Styles */
         .loader-container {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(30, 30, 30, 0.9);
+            inset: 0;
+            background: rgba(26, 26, 26, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             backdrop-filter: blur(4px);
+            border-radius: 8px;
         }
 
         .loader {
-            width: 50px;
-            height: 50px;
-            border: 3px solid var(--gray-light);
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--gray-light);
             border-radius: 50%;
             border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 0.8s ease-out infinite;
             position: relative;
         }
 
+        .loader::before,
         .loader::after {
             content: '';
             position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border: 3px solid transparent;
-            border-top-color: rgba(18, 140, 126, 0.3);
+            inset: -6px;
             border-radius: 50%;
-            animation: spin 2s linear infinite;
+            border: 2px solid transparent;
+            border-top-color: var(--primary);
+            opacity: 0.5;
+            animation: spin 1.2s linear infinite;
+        }
+
+        .loader::after {
+            inset: -12px;
+            opacity: 0.3;
+            animation-duration: 1.6s;
         }
 
         .stats-loader {
             display: inline-block;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             border: 2px solid var(--gray-light);
             border-radius: 50%;
             border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
+            animation: spin 0.8s ease-out infinite;
         }
 
         @keyframes spin {
@@ -172,44 +179,63 @@
             }
         }
 
-        .fade-out {
-            animation: fadeOut 0.3s ease-out forwards;
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
         }
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-                visibility: hidden;
-            }
+        .pagination button {
+            background: var(--gray-light);
+            color: var(--light);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 1rem;
-            }
-
-            .stats-container {
-                grid-template-columns: 1fr;
-            }
-
-            th, td {
-                padding: 0.75rem;
+                padding: 0.5rem;
             }
 
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>WhatsApp Checker Usage</h1>
-        <p>Track and monitor WhatsApp number verification activities</p>
-    </div>
+
+        <div class="header">
+            <h1>WhatsApp Checker Usage</h1>
+            <p>Track and monitor WhatsApp number verification activities</p>
+        </div>
     <div class="container">
         <div class="stats-container">
             <div class="stat-card">
@@ -221,8 +247,8 @@
                 <div class="number" id="totalChecks"><div class="stats-loader"></div></div>
             </div>
             <div class="stat-card">
-                <h3>Success Rate</h3>
-                <div class="number" id="successRate"><div class="stats-loader"></div></div>
+                <h3>Active Today</h3>
+                <div class="number" id="activeToday"><div class="stats-loader"></div></div>
             </div>
         </div>
 
@@ -230,67 +256,137 @@
             <div id="tableLoader" class="loader-container">
                 <div class="loader"></div>
             </div>
-            <table id="usageTable">
+            <table>
                 <thead>
                     <tr>
                         <th>User ID</th>
                         <th>Username</th>
                         <th>Timestamp</th>
-                        <th>Number Checked</th>
-                        <th>Result</th>
+                        <th>Number</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="usageBody"></tbody>
             </table>
+            <div class="pagination" id="pagination"></div>
         </div>
     </div>
 
     <script>
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let allData = [];
+
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(date));
+        }
+
+        function displayPage(page) {
+            const tbody = document.getElementById('usageBody');
+            tbody.innerHTML = '';
+            
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const pageData = allData.slice(start, end);
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.userId}</td>
+                    <td>${row.username}</td>
+                    <td>${formatDate(row.timestamp)}</td>
+                    <td>${row.number}</td>
+                    <td>${row.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '←';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayPage(currentPage);
+                }
+            };
+            pagination.appendChild(prevButton);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.classList.toggle('active', i === currentPage);
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    displayPage(currentPage);
+                };
+                pagination.appendChild(pageButton);
+            }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '→';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayPage(currentPage);
+                }
+            };
+            pagination.appendChild(nextButton);
+        }
+
+        // Fetch and display data
         fetch('/usage')
             .then(response => response.json())
             .then(data => {
-                const tbody = document.getElementById('usageBody');
+                allData = data;
                 
                 // Calculate statistics
                 const uniqueUsers = new Set(data.map(row => row.userId)).size;
                 const totalChecks = data.length;
-                const successfulChecks = data.filter(row => row.result === 'success').length;
-                const successRate = ((successfulChecks / totalChecks) * 100).toFixed(1);
+                const today = new Date().toDateString();
+                const activeToday = new Set(
+                    data.filter(row => new Date(row.timestamp).toDateString() === today)
+                        .map(row => row.userId)
+                ).size;
 
                 // Update statistics cards
                 document.getElementById('totalUsers').textContent = uniqueUsers;
                 document.getElementById('totalChecks').textContent = totalChecks;
-                document.getElementById('successRate').textContent = `${successRate}%`;
+                document.getElementById('activeToday').textContent = activeToday;
 
-                // Populate table
-                data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.userId}</td>
-                        <td>${row.username}</td>
-                        <td>${new Date(row.timestamp).toLocaleString()}</td>
-                        <td>${row.number}</td>
-                        <td>${row.result}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                // Display first page
+                displayPage(1);
 
-                // Remove loader with fade animation
+                // Remove loader
                 const tableLoader = document.getElementById('tableLoader');
-                tableLoader.classList.add('fade-out');
-                setTimeout(() => {
-                    tableLoader.style.display = 'none';
-                }, 300);
+                tableLoader.style.opacity = '0';
+                setTimeout(() => tableLoader.style.display = 'none', 300);
             })
             .catch(error => {
-                console.error('Error fetching usage:', error);
-                // Show error state in loaders
-                document.getElementById('totalUsers').textContent = 'Error';
-                document.getElementById('totalChecks').textContent = 'Error';
-                document.getElementById('successRate').textContent = 'Error';
-                
-                const tableLoader = document.getElementById('tableLoader');
-                tableLoader.innerHTML = '<div style="color: var(--primary)">Error loading data</div>';
+                console.error('Error:', error);
+                const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
+                document.getElementById('totalUsers').innerHTML = errorMessage;
+                document.getElementById('totalChecks').innerHTML = errorMessage;
+                document.getElementById('activeToday').innerHTML = errorMessage;
+                document.getElementById('tableLoader').innerHTML = errorMessage;
             });
     </script>
 </body>
