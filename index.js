@@ -26,14 +26,14 @@ const db = new sqlite3.Database('./usage.db', (err) => {
     else console.log('Connected to SQLite database');
 });
 
-// Updated table schema with username
+// Updated table schema with username, single number per row
 db.run(`
     CREATE TABLE IF NOT EXISTS usage (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         userId TEXT,
         username TEXT,
         timestamp TEXT,
-        numbers TEXT,
+        number TEXT,
         result TEXT
     )
 `);
@@ -86,15 +86,17 @@ bot.on('message', async (msg) => {
 
     const results = await checkNumbersOnWhatsApp(validNumbers);
 
-    // Log usage to SQLite with username
+    // Log each number and result as a separate row in SQLite
     const timestamp = new Date().toISOString();
-    db.run(
-        'INSERT INTO usage (userId, username, timestamp, numbers, result) VALUES (?, ?, ?, ?, ?)',
-        [userId, username, timestamp, validNumbers.join(', '), results.join('; ')],
-        (err) => {
-            if (err) console.error('Error logging usage:', err);
-        }
-    );
+    for (let i = 0; i < validNumbers.length; i++) {
+        db.run(
+            'INSERT INTO usage (userId, username, timestamp, number, result) VALUES (?, ?, ?, ?, ?)',
+            [userId, username, timestamp, validNumbers[i], results[i]],
+            (err) => {
+                if (err) console.error('Error logging usage:', err);
+            }
+        );
+    }
 
     bot.sendMessage(chatId, results.join('\n'));
 });
@@ -171,11 +173,11 @@ async function checkNumbersOnWhatsApp(numbers) {
 
 // Express Web Server for UI
 const app = express();
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'Public')));
 
 // Serve index.html at the root route
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
 // API endpoint for usage data
