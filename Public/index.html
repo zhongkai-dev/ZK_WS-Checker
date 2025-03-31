@@ -37,6 +37,7 @@
         <thead>
             <tr>
                 <th>User ID</th>
+                <th>Username</th>
                 <th>Timestamp</th>
                 <th>Numbers Checked</th>
                 <th>Results</th>
@@ -54,6 +55,7 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${row.userId}</td>
+                        <td>${row.username}</td>
                         <td>${new Date(row.timestamp).toLocaleString()}</td>
                         <td>${row.numbers}</td>
                         <td>${row.result.replace(/; /g, '<br>')}</td>

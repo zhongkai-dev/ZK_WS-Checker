@@ -26,10 +26,12 @@ const db = new sqlite3.Database('./usage.db', (err) => {
     else console.log('Connected to SQLite database');
 });
 
+// Updated table schema with username
 db.run(`
     CREATE TABLE IF NOT EXISTS usage (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         userId TEXT,
+        username TEXT,
         timestamp TEXT,
         numbers TEXT,
         result TEXT
@@ -62,6 +64,7 @@ client.initialize();
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id; // Unique Telegram user ID
+    const username = msg.from.username || 'N/A'; // Capture username, default to 'N/A' if not set
     const text = msg.text;
 
     if (!text) return;
@@ -83,11 +86,11 @@ bot.on('message', async (msg) => {
 
     const results = await checkNumbersOnWhatsApp(validNumbers);
 
-    // Log usage to SQLite
+    // Log usage to SQLite with username
     const timestamp = new Date().toISOString();
     db.run(
-        'INSERT INTO usage (userId, timestamp, numbers, result) VALUES (?, ?, ?, ?)',
-        [userId, timestamp, validNumbers.join(', '), results.join('; ')],
+        'INSERT INTO usage (userId, username, timestamp, numbers, result) VALUES (?, ?, ?, ?, ?)',
+        [userId, username, timestamp, validNumbers.join(', '), results.join('; ')],
         (err) => {
             if (err) console.error('Error logging usage:', err);
         }
