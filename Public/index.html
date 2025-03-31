@@ -5,52 +5,192 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Checker Usage</title>
     <style>
-        body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
+        :root {
+            --primary: #128C7E;
+            --dark: #111111;
+            --light: #ffffff;
+            --gray: #1E1E1E;
+            --gray-light: #333;
         }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--gray);
+            border-radius: 4px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card h3 {
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+
+        .table-container {
+            background: var(--gray);
+            border-radius: 4px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 0;
+            width: 100%;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #2a2a2a;
         }
+
         th, td {
-            padding: 10px;
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #444;
+            border-bottom: 1px solid var(--gray-light);
         }
+
         th {
-            background-color: #333;
+            background-color: rgba(18, 140, 126, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
         }
-        h1 {
-            text-align: center;
-            color: #fff;
+
+        tr:hover {
+            background-color: rgba(18, 140, 126, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>WhatsApp Checker Usage</h1>
-    <table id="usageTable">
-        <thead>
-            <tr>
-                <th>User ID</th>
-                <th>Username</th>
-                <th>Timestamp</th>
-                <th>Number Checked</th>
-                <th>Result</th>
-            </tr>
-        </thead>
-        <tbody id="usageBody"></tbody>
-    </table>
+    <div class="container">
+        <div class="header">
+            <h1>WhatsApp Checker Usage</h1>
+            <p>Track and monitor WhatsApp number verification activities</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Total Users</h3>
+                <div class="number" id="totalUsers">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Checks</h3>
+                <div class="number" id="totalChecks">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Success Rate</h3>
+                <div class="number" id="successRate">0%</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="usageTable">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Timestamp</th>
+                        <th>Number Checked</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody id="usageBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         fetch('/usage')
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById('usageBody');
+                
+                // Calculate statistics
+                const uniqueUsers = new Set(data.map(row => row.userId)).size;
+                const totalChecks = data.length;
+                const successfulChecks = data.filter(row => row.result === 'success').length;
+                const successRate = ((successfulChecks / totalChecks) * 100).toFixed(1);
+
+                // Update statistics cards
+                document.getElementById('totalUsers').textContent = uniqueUsers;
+                document.getElementById('totalChecks').textContent = totalChecks;
+                document.getElementById('successRate').textContent = `${successRate}%`;
+
+                // Populate table
                 data.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
