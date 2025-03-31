@@ -39,8 +39,8 @@
                 <th>User ID</th>
                 <th>Username</th>
                 <th>Timestamp</th>
-                <th>Numbers Checked</th>
-                <th>Results</th>
+                <th>Number Checked</th>
+                <th>Result</th>
             </tr>
         </thead>
         <tbody id="usageBody"></tbody>
@@ -57,8 +57,8 @@
                         <td>${row.userId}</td>
                         <td>${row.username}</td>
                         <td>${new Date(row.timestamp).toLocaleString()}</td>
-                        <td>${row.numbers}</td>
-                        <td>${row.result.replace(/; /g, '<br>')}</td>
+                        <td>${row.number}</td>
+                        <td>${row.result}</td>
                     `;
                     tbody.appendChild(tr);
                 });
