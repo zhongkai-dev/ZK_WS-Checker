@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Checker Usage</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background-color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>WhatsApp Checker Usage</h1>
+    <table id="usageTable">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Timestamp</th>
+                <th>Numbers Checked</th>
+                <th>Results</th>
+            </tr>
+        </thead>
+        <tbody id="usageBody"></tbody>
+    </table>
+
+    <script>
+        fetch('/usage')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('usageBody');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.userId}</td>
+                        <td>${new Date(row.timestamp).toLocaleString()}</td>
+                        <td>${row.numbers}</td>
+                        <td>${row.result.replace(/; /g, '<br>')}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error fetching usage:', error));
+    </script>
+</body>
+</html>
