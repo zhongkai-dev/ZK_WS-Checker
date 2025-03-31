@@ -42,6 +42,8 @@
         .login-container.hidden {
             opacity: 0;
             pointer-events: none;
+            position: absolute;
+            width: 100%;
         }
 
         .login-form {
@@ -55,7 +57,7 @@
             transition: transform 0.3s ease-in-out;
         }
 
-        .login-container.hidden .login-form {
+        .login-form.hidden {
             transform: translateY(-20px);
         }
 
@@ -121,11 +123,11 @@
 
         .container {
             width: 100%;
-            padding: 2rem;
+            padding: 1rem;
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 0.75rem;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
@@ -138,7 +140,7 @@
 
         .header {
             text-align: center;
-            padding: 1.5rem;
+            padding: 1rem;
             background: var(--gray);
             border-radius: 8px;
             margin-bottom: 0.5rem;
@@ -159,14 +161,13 @@
 
         .stat-card {
             background: var(--gray);
-            border-radius: 8px;
-            padding: 1.5rem;
+            border-radius: 5px;
+            padding: 1rem;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease;
+            animation: fadeInUp 0.5s ease-out forwards;
             opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s ease forwards;
         }
 
         .stat-card:nth-child(1) { animation-delay: 0.1s; }
@@ -174,6 +175,10 @@
         .stat-card:nth-child(3) { animation-delay: 0.3s; }
 
         @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -182,7 +187,6 @@
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .stat-card h3 {
@@ -201,16 +205,20 @@
         .table-container {
             background: var(--gray);
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             flex: 1;
             display: flex;
             flex-direction: column;
             min-height: 400px;
             position: relative;
+            animation: fadeIn 0.5s ease-out 0.4s forwards;
             opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.5s ease forwards 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         table {
@@ -336,7 +344,7 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 1rem;
+                padding: 0.5rem;
             }
 
             .header h1 {
@@ -413,7 +421,7 @@
     </div>
 
     <script>
-        // Binary encoded password (Facai8898@)
+
         const ENCODED_PASSWORD = '01000110011000010110001101100001011010010011100000111000001110010011100001000000';
         
         function binaryToText(binary) {
@@ -422,20 +430,17 @@
             ).join('');
         }
 
-        // Check for existing session
-        function checkSession() {
+        function checkLoginState() {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             if (isLoggedIn === 'true') {
                 showDashboard();
+                loadDashboard();
             }
         }
 
-        // Show dashboard
         function showDashboard() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboard').classList.add('visible');
-            loadDashboard();
-            localStorage.setItem('isLoggedIn', 'true');
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -446,7 +451,9 @@
             const errorMessage = document.getElementById('errorMessage');
             
             if (username === 'admin' && password === binaryToText(ENCODED_PASSWORD)) {
+                localStorage.setItem('isLoggedIn', 'true');
                 showDashboard();
+                loadDashboard();
             } else {
                 errorMessage.style.display = 'block';
             }
@@ -473,13 +480,8 @@
             const end = start + ITEMS_PER_PAGE;
             const pageData = allData.slice(start, end);
 
-            pageData.forEach((row, index) => {
+            pageData.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.style.opacity = '0';
-                tr.style.transform = 'translateY(10px)';
-                tr.style.transition = 'all 0.3s ease';
-                tr.style.transitionDelay = `${index * 0.05}s`;
-                
                 tr.innerHTML = `
                     <td>${row.userId}</td>
                     <td>${row.username}</td>
@@ -487,14 +489,7 @@
                     <td>${row.number}</td>
                     <td>${row.status}</td>
                 `;
-                
                 tbody.appendChild(tr);
-                
-                // Trigger animation
-                setTimeout(() => {
-                    tr.style.opacity = '1';
-                    tr.style.transform = 'translateY(0)';
-                }, 50);
             });
 
             updatePagination();
@@ -541,38 +536,41 @@
         }
 
         function loadDashboard() {
-            // Simulated data for demonstration
-            const mockData = Array.from({ length: 50 }, (_, i) => ({
-                userId: `USER${i + 1}`,
-                username: `user${i + 1}`,
-                timestamp: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
-                number: `+1${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-                status: Math.random() > 0.3 ? 'Active' : 'Inactive'
-            }));
+            fetch('/usage')
+                .then(response => response.json())
+                .then(data => {
+                    allData = data;
+                    
+                    const uniqueUsers = new Set(data.map(row => row.userId)).size;
+                    const totalChecks = data.length;
+                    const today = new Date().toDateString();
+                    const activeToday = new Set(
+                        data.filter(row => new Date(row.timestamp).toDateString() === today)
+                            .map(row => row.userId)
+                    ).size;
 
-            allData = mockData;
-            
-            const uniqueUsers = new Set(mockData.map(row => row.userId)).size;
-            const totalChecks = mockData.length;
-            const today = new Date().toDateString();
-            const activeToday = new Set(
-                mockData.filter(row => new Date(row.timestamp).toDateString() === today)
-                    .map(row => row.userId)
-            ).size;
+                    document.getElementById('totalUsers').textContent = uniqueUsers;
+                    document.getElementById('totalChecks').textContent = totalChecks;
+                    document.getElementById('activeToday').textContent = activeToday;
 
-            document.getElementById('totalUsers').textContent = uniqueUsers;
-            document.getElementById('totalChecks').textContent = totalChecks;
-            document.getElementById('activeToday').textContent = activeToday;
+                    displayPage(1);
 
-            displayPage(1);
-
-            const tableLoader = document.getElementById('tableLoader');
-            tableLoader.style.opacity = '0';
-            setTimeout(() => tableLoader.style.display = 'none', 300);
+                    const tableLoader = document.getElementById('tableLoader');
+                    tableLoader.style.opacity = '0';
+                    setTimeout(() => tableLoader.style.display = 'none', 300);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
+                    document.getElementById('totalUsers').innerHTML = errorMessage;
+                    document.getElementById('totalChecks').innerHTML = errorMessage;
+                    document.getElementById('activeToday').innerHTML = errorMessage;
+                    document.getElementById('tableLoader').innerHTML = errorMessage;
+                });
         }
 
-        // Check session on page load
-        checkSession();
+        // Check login state on page load
+        checkLoginState();
     </script>
 </body>
 </html>
