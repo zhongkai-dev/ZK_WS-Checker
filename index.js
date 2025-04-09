@@ -88,6 +88,21 @@ bot.on('message', async (msg) => {
         }
     );
 
+    // User Statistics Command
+    if (text === '/stats') {
+        db.all('SELECT result FROM usage WHERE userId = ?', [userId], (err, rows) => {
+            if (err) {
+                console.error('Error fetching stats:', err);
+                return bot.sendMessage(chatId, 'Error fetching your stats.');
+            }
+            const total = rows.length;
+            const зарегистрированных = rows.filter(row => row.result.includes('✅')).length;
+            const rate = total ? (зарегистрированных / total * 100).toFixed(2) : 0;
+            bot.sendMessage(chatId, `Your Stats:\nTotal Checks: ${total}\nRegistered: ${зарегистрированных} (${rate}%)`);
+        });
+        return;
+    }
+
     const rawNumbers = text.split(/[\n\s]+/).filter(Boolean);
     const validNumbers = rawNumbers.map(normalizePhoneNumber).filter(Boolean);
 
