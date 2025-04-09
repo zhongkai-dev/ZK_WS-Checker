@@ -6,7 +6,7 @@ const express = require('express');
 const path = require('path');
 
 // Telegram Bot Token and Chat ID (replace with your own)
-const TELEGRAM_BOT_TOKEN = '8012229791:AAG72Hs0UH6vUOibvayrKXvrjIz2TLWYSOc';
+const TELEGRAM_BOT_TOKEN = '8012229791:AAFw7ojB0L61NrWwm0ZtAPubt60WNm_nQ78';
 const CHAT_ID_FOR_QR_CODE = '7965121728';
 
 // Initialize Telegram Bot
