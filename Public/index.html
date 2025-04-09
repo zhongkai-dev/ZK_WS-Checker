@@ -494,6 +494,16 @@
             pointer-events: all;
         }
 
+        .broadcast-container {
+            background: var(--gray);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+            opacity: 0;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 0.5rem;
@@ -572,6 +582,13 @@
                 <tbody id="usageBody"></tbody>
             </table>
             <div class="pagination" id="pagination"></div>
+        </div>
+
+        <div class="broadcast-container">
+            <h2>Broadcast Message</h2>
+            <textarea id="broadcastMessage" placeholder="Enter message to send to all users" rows="4" style="width: 100%; padding: 0.5rem;"></textarea>
+            <button id="sendBroadcast" class="login-button" style="margin-top: 0.5rem;">Send to All Users</button>
+            <div id="broadcastStatus" style="color: var(--primary); margin-top: 0.5rem;"></div>
         </div>
     </div>
 
@@ -670,7 +687,6 @@
             const end = start + ITEMS_PER_PAGE;
             const pageData = allData.slice(start, end);
 
-            // Add a small delay between each row for animation
             for (let i = 0; i < pageData.length; i++) {
                 const row = pageData[i];
                 const tr = document.createElement('tr');
@@ -694,7 +710,15 @@
             pagination.innerHTML = '';
             
             const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
-            
+            const maxPagesToShow = 5;
+            const half = Math.floor(maxPagesToShow / 2);
+            let startPage = Math.max(1, currentPage - half);
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
             const prevButton = document.createElement('button');
             prevButton.textContent = '←';
             prevButton.disabled = currentPage === 1;
@@ -706,7 +730,23 @@
             };
             pagination.appendChild(prevButton);
 
-            for (let i = 1; i <= totalPages; i++) {
+            if (startPage > 1) {
+                const firstButton = document.createElement('button');
+                firstButton.textContent = '1';
+                firstButton.onclick = () => {
+                    currentPage = 1;
+                    displayPage(currentPage);
+                };
+                pagination.appendChild(firstButton);
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '0.5rem';
+                    pagination.appendChild(dots);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
                 const pageButton = document.createElement('button');
                 pageButton.textContent = i;
                 pageButton.classList.toggle('active', i === currentPage);
@@ -715,6 +755,22 @@
                     displayPage(currentPage);
                 };
                 pagination.appendChild(pageButton);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '0.5rem';
+                    pagination.appendChild(dots);
+                }
+                const lastButton = document.createElement('button');
+                lastButton.textContent = totalPages;
+                lastButton.onclick = () => {
+                    currentPage = totalPages;
+                    displayPage(currentPage);
+                };
+                pagination.appendChild(lastButton);
             }
 
             const nextButton = document.createElement('button');
@@ -743,7 +799,6 @@
                         .map(row => row.userId)
                 ).size;
 
-                // Animate the stats with a counting effect
                 animateNumber('totalUsers', uniqueUsers);
                 animateNumber('totalChecks', totalChecks);
                 animateNumber('activeToday', activeToday);
@@ -782,8 +837,36 @@
             }, duration / steps);
         }
 
-        // Check login state on page load
+        document.getElementById('sendBroadcast').addEventListener('click', async () => {
+            const message = document.getElementById('broadcastMessage').value.trim();
+            const status = document.getElementById('broadcastStatus');
+            
+            if (!message) {
+                status.textContent = 'Please enter a message.';
+                return;
+            }
+
+            status.textContent = 'Sending...';
+            try {
+                const response = await fetch('/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                
+                if (response.ok) {
+                    status.textContent = 'Message sent successfully!';
+                    document.getElementById('broadcastMessage').value = '';
+                } else {
+                    status.textContent = 'Failed to send message.';
+                }
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+            }
+            setTimeout(() => status.textContent = '', 3000);
+        });
+
         checkLoginState();
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92dbced46ef0adf4',t:'MTc0NDIyMDYxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
