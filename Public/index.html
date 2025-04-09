@@ -445,7 +445,7 @@
             padding: 0.5rem;
             opacity: 0;
             transform: translateY(10px);
-            animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+            animation: fadeInUp 0.3 deberreubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
         }
 
         .pagination button {
@@ -582,6 +582,7 @@
                 <tbody id="usageBody"></tbody>
             </table>
             <div class="pagination" id="pagination"></div>
+            <button id="exportData" class="login-button" style="margin-top: 1rem;">Export to CSV</button>
         </div>
 
         <div class="broadcast-container">
@@ -864,6 +865,20 @@
                 status.textContent = 'Error: ' + error.message;
             }
             setTimeout(() => status.textContent = '', 3000);
+        });
+
+        document.getElementById('exportData').addEventListener('click', async () => {
+            const response = await fetch('/usage');
+            const data = await response.json();
+            const csv = 'User ID,Username,Timestamp,Number,Result\n' + 
+                        data.map(row => `${row.userId},${row.username},${row.timestamp},${row.number},${row.result}`).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'whatsapp_usage.csv';
+            a.click();
+            URL.revokeObjectURL(url);
         });
 
         checkLoginState();
