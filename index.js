@@ -26,7 +26,7 @@ const db = new sqlite3.Database('./usage.db', (err) => {
     else console.log('Connected to SQLite database');
 });
 
-// Updated table schema with username, single number per row
+// Usage table
 db.run(`
     CREATE TABLE IF NOT EXISTS usage (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,6 +35,16 @@ db.run(`
         timestamp TEXT,
         number TEXT,
         result TEXT
+    )
+`);
+
+// Users table for tracking Telegram users
+db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+        chatId TEXT PRIMARY KEY,
+        userId TEXT,
+        username TEXT,
+        lastActive TEXT
     )
 `);
 
@@ -63,16 +73,22 @@ client.initialize();
 // Listen for Telegram messages
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
-    const userId = msg.from.id; // Unique Telegram user ID
-    const username = msg.from.username || 'N/A'; // Capture username, default to 'N/A' if not set
+    const userId = msg.from.id;
+    const username = msg.from.username || 'N/A';
     const text = msg.text;
 
     if (!text) return;
 
-    // Split by newlines or spaces, filter out empty strings
-    const rawNumbers = text.split(/[\n\s]+/).filter(Boolean);
+    // Update or insert user info
+    db.run(
+        'INSERT OR REPLACE INTO users (chatId, userId, username, lastActive) VALUES (?, ?, ?, ?)',
+        [chatId, userId, username, new Date().toISOString()],
+        (err) => {
+            if (err) console.error('Error storing user:', err);
+        }
+    );
 
-    // Normalize phone numbers
+    const rawNumbers = text.split(/[\n\s]+/).filter(Boolean);
     const validNumbers = rawNumbers.map(normalizePhoneNumber).filter(Boolean);
 
     if (validNumbers.length === 0) {
@@ -86,7 +102,6 @@ bot.on('message', async (msg) => {
 
     const results = await checkNumbersOnWhatsApp(validNumbers);
 
-    // Log each number and result as a separate row in SQLite
     const timestamp = new Date().toISOString();
     for (let i = 0; i < validNumbers.length; i++) {
         db.run(
@@ -104,33 +119,23 @@ bot.on('message', async (msg) => {
 // Function to normalize phone numbers (US/Canada only)
 function normalizePhoneNumber(number) {
     try {
-        // Remove spaces, dashes, and other non-numeric characters except +
         let cleaned = number.replace(/[^0-9+]/g, '');
-
-        // Add +1 if missing
         if (!cleaned.startsWith('+1')) {
             if (cleaned.length === 10) {
-                cleaned = '+1' + cleaned; // Assume US/Canada for 10-digit numbers
+                cleaned = '+1' + cleaned;
             } else if (!cleaned.startsWith('+')) {
                 cleaned = '+' + cleaned;
             }
         }
-
-        // Must start with +1 for US/Canada
         if (!cleaned.startsWith('+1')) {
             console.warn(`Non-US/Canada number skipped: ${number}`);
             return null;
         }
-
-        // Remove leading zeros after country code
         cleaned = '+1' + cleaned.slice(2).replace(/^0+/, '');
-
-        // Validate length (should be 12 characters: +1 and 10 digits)
         if (cleaned.length !== 12) {
             console.warn(`Invalid US/Canada number skipped: ${number}`);
             return null;
         }
-
         return cleaned;
     } catch (error) {
         console.error(`Error normalizing number: ${number}`, error);
@@ -141,22 +146,15 @@ function normalizePhoneNumber(number) {
 // Function to check numbers on WhatsApp
 async function checkNumbersOnWhatsApp(numbers) {
     const results = [];
-
-    // Wait for client to be ready
     if (!client.info) {
         await new Promise(resolve => client.on('ready', resolve));
     }
-
     for (const number of numbers) {
         try {
-            // Remove + for WhatsApp ID format
             const phoneNumber = number.replace('+', '');
             const whatsappId = `${phoneNumber}@c.us`;
-
             console.log('Checking WID:', whatsappId);
-
             const isRegistered = await client.isRegisteredUser(whatsappId);
-
             if (isRegistered) {
                 results.push(`✅ ${number} is registered on WhatsApp.`);
             } else {
@@ -167,7 +165,6 @@ async function checkNumbersOnWhatsApp(numbers) {
             results.push(`⚠️ Error checking ${number}: ${error.message}`);
         }
     }
-
     return results;
 }
 
@@ -175,12 +172,10 @@ async function checkNumbersOnWhatsApp(numbers) {
 const app = express();
 app.use(express.static(path.join(__dirname, 'Public')));
 
-// Serve index.html at the root route
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 
-// API endpoint for usage data
 app.get('/usage', (req, res) => {
     db.all('SELECT * FROM usage ORDER BY timestamp DESC', (err, rows) => {
         if (err) {
@@ -192,10 +187,43 @@ app.get('/usage', (req, res) => {
     });
 });
 
+app.post('/broadcast', express.json(), (req, res) => {
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).send('Message is required');
+    }
+    db.all('SELECT chatId FROM users', (err, rows) => {
+        if (err) {
+            console.error('Error fetching users:', err);
+            return res.status(500).send('Error fetching users');
+        }
+        const chatIds = rows.map(row => row.chatId);
+        console.log(`Broadcasting to ${chatIds.length} users`);
+        let successCount = 0;
+        chatIds.forEach(chatId => {
+            bot.sendMessage(chatId, `[Admin Broadcast]\n${message}`)
+                .then(() => {
+                    successCount++;
+                    if (successCount === chatIds.length) {
+                        res.send('Broadcast sent successfully');
+                    }
+                })
+                .catch(error => {
+                    console.error(`Failed to send to ${chatId}:`, error);
+                    if (successCount + 1 === chatIds.length) {
+                        res.status(500).send('Broadcast partially failed');
+                    }
+                });
+        });
+        if (chatIds.length === 0) {
+            res.send('No users to broadcast to');
+        }
+    });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Web server running on port ${PORT}`));
 
-// Error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
 });
