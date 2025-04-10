@@ -574,7 +574,7 @@
                     </thead>
                     <tbody id="dashboardBody"></tbody>
                 </table>
-                <div class="pagination" id="dashboardPagination"></div W
+                <div class="pagination" id="dashboardPagination"></div>
             </div>
         </div>
 
@@ -668,7 +668,11 @@
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
-            if (pageId === 'history') loadHistory();
+            if (pageId === 'history' && (!allData.length || allData.length === 0)) {
+                loadHistory();
+            } else if (pageId === 'history') {
+                displayPage(historyPage, 'historyBody', 'historyPagination');
+            }
         }
 
         // Hamburger Menu
@@ -706,6 +710,7 @@
             }
 
             updatePagination(pageNum, paginationId, data);
+            document.getElementById(tbodyId === 'dashboardBody' ? 'dashboardLoader' : 'historyLoader').classList.add('hidden');
         }
 
         function updatePagination(currentPage, paginationId, data = allData) {
@@ -810,18 +815,27 @@
                 animateNumber('activeToday', activeToday);
 
                 await displayPage(dashboardPage, 'dashboardBody', 'dashboardPagination');
-                document.getElementById('dashboardLoader').classList.add('hidden');
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error loading dashboard:', error);
                 document.getElementById('totalUsers').innerHTML = 'Error';
                 document.getElementById('totalChecks').innerHTML = 'Error';
                 document.getElementById('activeToday').innerHTML = 'Error';
+                document.getElementById('dashboardLoader').classList.add('hidden');
             }
         }
 
         async function loadHistory() {
-            await displayPage(historyPage, 'historyBody', 'historyPagination');
-            document.getElementById('historyLoader').classList.add('hidden');
+            try {
+                if (!allData.length) {
+                    const response = await fetch('/usage');
+                    allData = await response.json();
+                }
+                await displayPage(historyPage, 'historyBody', 'historyPagination');
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historyBody').innerHTML = '<tr><td colspan="5">Error loading history</td></tr>';
+                document.getElementById('historyLoader').classList.add('hidden');
+            }
         }
 
         function animateNumber(elementId, finalNumber) {
