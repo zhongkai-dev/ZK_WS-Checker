@@ -66,6 +66,11 @@
             transition: transform var(--transition-duration) ease;
             z-index: 1000;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+            display: none; /* Hidden by default */
+        }
+
+        .sidebar.visible {
+            display: block; /* Shown after login */
         }
 
         .sidebar.hidden {
@@ -113,7 +118,7 @@
         }
 
         .hamburger {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed;
             top: 1rem;
             left: 1rem;
@@ -128,6 +133,10 @@
             transition: transform 0.3s;
         }
 
+        .hamburger.visible {
+            display: block; /* Shown after login on mobile */
+        }
+
         .hamburger:hover {
             transform: rotate(90deg);
         }
@@ -138,6 +147,11 @@
             padding: 1rem;
             min-height: 100vh;
             transition: margin-left var(--transition-duration) ease;
+            display: none; /* Hidden by default */
+        }
+
+        .main-content.visible {
+            display: block; /* Shown after login */
         }
 
         .main-content.full {
@@ -483,8 +497,8 @@
                 margin-left: 0;
             }
 
-            .hamburger {
-                display: block;
+            .hamburger.visible {
+                display: block; /* Only visible after login */
             }
 
             .stats-container {
@@ -627,11 +641,17 @@
         function checkLoginState() {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             if (isLoggedIn === 'true') {
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('mainContent').style.display = 'block';
+                showDashboard();
                 loadDashboard();
                 showPage('dashboard');
             }
+        }
+
+        function showDashboard() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('sidebar').classList.add('visible');
+            document.getElementById('hamburger').classList.add('visible');
+            document.getElementById('mainContent').classList.add('visible');
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -642,8 +662,7 @@
 
             if (username === 'admin' && password === binaryToText(ENCODED_PASSWORD)) {
                 localStorage.setItem('isLoggedIn', 'true');
-                document.getElementById('loginPage').classList.add('hidden');
-                document.getElementById('mainContent').style.display = 'block';
+                showDashboard();
                 loadDashboard();
                 showPage('dashboard');
             } else {
