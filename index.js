@@ -72,8 +72,8 @@ client.initialize();
 
 // Listen for Telegram messages
 bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
+    const chatId = String(msg.chat.id); // Ensure chatId is a string
+    const userId = String(msg.from.id);
     const username = msg.from.username || 'N/A';
     const text = msg.text;
 
@@ -96,9 +96,9 @@ bot.on('message', async (msg) => {
                 return bot.sendMessage(chatId, 'Error fetching your stats.');
             }
             const total = rows.length;
-            const зарегистрированных = rows.filter(row => row.result.includes('✅')).length;
-            const rate = total ? (зарегистрированных / total * 100).toFixed(2) : 0;
-            bot.sendMessage(chatId, `Your Stats:\nTotal Checks: ${total}\nRegistered: ${зарегистрированных} (${rate}%)`);
+            const registered = rows.filter(row => row.result.includes('✅')).length;
+            const rate = total ? (registered / total * 100).toFixed(2) : 0;
+            bot.sendMessage(chatId, `Your Stats:\nTotal Checks: ${total}\nRegistered: ${registered} (${rate}%)`);
         });
         return;
     }
@@ -186,6 +186,7 @@ async function checkNumbersOnWhatsApp(numbers) {
 // Express Web Server for UI
 const app = express();
 app.use(express.static(path.join(__dirname, 'Public')));
+app.use(express.json());
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
@@ -202,37 +203,42 @@ app.get('/usage', (req, res) => {
     });
 });
 
-app.post('/broadcast', express.json(), (req, res) => {
+app.post('/broadcast', (req, res) => {
     const { message } = req.body;
     if (!message) {
         return res.status(400).send('Message is required');
     }
     db.all('SELECT chatId FROM users', (err, rows) => {
         if (err) {
-            console.error('Error fetching users:', err);
+            console.error('Error fetching users for broadcast:', err);
             return res.status(500).send('Error fetching users');
         }
         const chatIds = rows.map(row => row.chatId);
-        console.log(`Broadcasting to ${chatIds.length} users`);
+        console.log(`Broadcasting to ${chatIds.length} users:`, chatIds);
         let successCount = 0;
+        let errorCount = 0;
+
+        if (chatIds.length === 0) {
+            return res.send('No users to broadcast to');
+        }
+
         chatIds.forEach(chatId => {
             bot.sendMessage(chatId, `[Admin Broadcast]\n${message}`)
                 .then(() => {
                     successCount++;
-                    if (successCount === chatIds.length) {
-                        res.send('Broadcast sent successfully');
+                    console.log(`Broadcast sent to ${chatId}`);
+                    if (successCount + errorCount === chatIds.length) {
+                        res.send(`Broadcast completed: ${successCount} successful, ${errorCount} failed`);
                     }
                 })
                 .catch(error => {
-                    console.error(`Failed to send to ${chatId}:`, error);
-                    if (successCount + 1 === chatIds.length) {
-                        res.status(500).send('Broadcast partially failed');
+                    errorCount++;
+                    console.error(`Failed to send broadcast to ${chatId}:`, error);
+                    if (successCount + errorCount === chatIds.length) {
+                        res.send(`Broadcast completed: ${successCount} successful, ${errorCount} failed`);
                     }
                 });
         });
-        if (chatIds.length === 0) {
-            res.send('No users to broadcast to');
-        }
     });
 });
 
