@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Checker Usage</title>
+    <title>WhatsApp Checker Admin</title>
     <style>
         :root {
             --primary: #25D366;
@@ -26,50 +26,163 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             line-height: 1.6;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             overflow-x: hidden;
+            position: relative;
         }
 
-        .page-transition {
+        /* Animated SVG Background */
+        .bg-svg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--dark);
-            z-index: 9999;
-            transform: translateY(100%);
-            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
         }
 
-        .page-transition.active {
-            animation: pageTransition 1s cubic-bezier(0.4, 0, 0.2, 1);
+        .bg-svg path {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 2;
+            animation: wave 10s linear infinite;
         }
 
-        @keyframes pageTransition {
-            0% { transform: translateY(100%); }
-            50% { transform: translateY(0); }
-            100% { transform: translateY(-100%); }
+        @keyframes wave {
+            0% { d: path("M0,100 Q200,50 400,100 T800,100 V200 H0 Z"); }
+            50% { d: path("M0,100 Q200,150 400,100 T800,100 V200 H0 Z"); }
+            100% { d: path("M0,100 Q200,50 400,100 T800,100 V200 H0 Z"); }
         }
 
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--gray);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translateX(0);
+            transition: transform var(--transition-duration) ease;
+            z-index: 1000;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            background: var(--primary);
+            color: var(--dark);
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .sidebar-nav li:hover,
+        .sidebar-nav li.active {
+            background: var(--gray-light);
+            transform: translateX(5px);
+        }
+
+        .sidebar-nav svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 1rem;
+            fill: var(--light);
+            transition: transform 0.3s;
+        }
+
+        .sidebar-nav li:hover svg {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1100;
+            background: var(--primary);
+            border: none;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--dark);
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .hamburger:hover {
+            transform: rotate(90deg);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 1rem;
+            min-height: 100vh;
+            transition: margin-left var(--transition-duration) ease;
+        }
+
+        .main-content.full {
+            margin-left: 0;
+        }
+
+        .page {
+            display: none;
+            background: var(--gray);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .page.active {
+            display: block;
+            animation: pageFadeIn 0.5s ease forwards;
+        }
+
+        @keyframes pageFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Login Page */
         .login-container {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             padding: 1rem;
-            opacity: 1;
-            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: opacity var(--transition-duration) ease;
         }
 
         .login-container.hidden {
             opacity: 0;
-            transform: scale(0.95);
             pointer-events: none;
-            position: absolute;
-            width: 100%;
         }
 
         .login-form {
@@ -79,62 +192,27 @@
             width: 100%;
             max-width: 400px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transform: translateY(0);
-            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+            animation: slideUp 0.5s ease forwards;
         }
 
-        .login-form::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--primary));
-            animation: loading 2s linear infinite;
-            display: none;
-        }
-
-        .login-form.loading::before {
-            display: block;
-        }
-
-        @keyframes loading {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .login-form.hidden {
-            transform: translateY(-20px) scale(0.95);
-            opacity: 0;
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .login-form h1 {
             color: var(--primary);
             text-align: center;
             margin-bottom: 1.5rem;
-            font-size: 1.75rem;
         }
 
         .form-group {
             margin-bottom: 1.25rem;
-            opacity: 1;
-            transform: translateY(0);
-            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .form-group.fade-out {
-            opacity: 0;
-            transform: translateY(-10px);
         }
 
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            color: var(--light);
-            font-size: 0.9rem;
         }
 
         .form-group input {
@@ -144,14 +222,12 @@
             border: 1px solid var(--gray-light);
             border-radius: 4px;
             color: var(--light);
-            font-size: 1rem;
-            transition: all 0.2s;
+            transition: border-color 0.2s;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.2);
         }
 
         .login-button {
@@ -161,263 +237,69 @@
             color: var(--dark);
             border: none;
             border-radius: 4px;
-            font-size: 1rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.2s;
         }
 
         .login-button:hover {
             background: #1fa855;
-        }
-
-        .login-button.loading {
-            pointer-events: none;
-            opacity: 0.8;
-        }
-
-        .login-button.loading::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            animation: buttonLoading 1.5s linear infinite;
-        }
-
-        @keyframes buttonLoading {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            transform: scale(1.02);
         }
 
         .error-message {
             color: #ff4444;
             text-align: center;
             margin-top: 1rem;
-            font-size: 0.9rem;
             display: none;
-            animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            animation: shake 0.4s ease;
         }
 
         @keyframes shake {
-            10%, 90% { transform: translateX(-1px); }
-            20%, 80% { transform: translateX(2px); }
-            30%, 50%, 70% { transform: translateX(-4px); }
-            40%, 60% { transform: translateX(4px); }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
-        .container {
-            width: 100%;
-            padding: 1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-        }
-
-        .container.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .header {
-            text-align: center;
-            padding: 1rem;
-            background: var(--gray);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            transform: translateY(-20px);
-            opacity: 0;
-            animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        @keyframes slideDown {
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .header h1 {
-            font-size: 1.75rem;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-
+        /* Dashboard */
         .stats-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .stat-card {
-            background: var(--gray);
+            background: var(--gray-light);
             border-radius: 5px;
             padding: 1rem;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease;
-            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform: scale(0.95);
             opacity: 0;
+            animation: cardPop 0.5s ease forwards;
         }
 
         .stat-card:nth-child(1) { animation-delay: 0.1s; }
         .stat-card:nth-child(2) { animation-delay: 0.2s; }
         .stat-card:nth-child(3) { animation-delay: 0.3s; }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
+        @keyframes cardPop {
             to {
+                transform: scale(1);
                 opacity: 1;
-                transform: translateY(0);
             }
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
         }
 
         .stat-card h3 {
             color: var(--primary);
             font-size: 0.9rem;
             margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .stat-card .number {
             font-size: 1.75rem;
             font-weight: bold;
-            position: relative;
-        }
-
-        .table-container {
-            background: var(--gray);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 400px;
-            position: relative;
-            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards;
-            opacity: 0;
-            overflow: hidden;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid var(--gray-light);
-            font-size: 0.9rem;
-            transition: all var(--transition-duration) ease;
-        }
-
-        th {
-            background-color: var(--gray-light);
-            color: var(--primary);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8rem;
-        }
-
-        tbody tr {
-            transition: all var(--transition-duration) ease;
-            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-
-        @keyframes slideIn {
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        tbody tr:nth-child(1) { animation-delay: 0.1s; }
-        tbody tr:nth-child(2) { animation-delay: 0.15s; }
-        tbody tr:nth-child(3) { animation-delay: 0.2s; }
-        tbody tr:nth-child(4) { animation-delay: 0.25s; }
-        tbody tr:nth-child(5) { animation-delay: 0.3s; }
-        tbody tr:nth-child(6) { animation-delay: 0.35s; }
-        tbody tr:nth-child(7) { animation-delay: 0.4s; }
-        tbody tr:nth-child(8) { animation-delay: 0.45s; }
-        tbody tr:nth-child(9) { animation-delay: 0.5s; }
-        tbody tr:nth-child(10) { animation-delay: 0.55s; }
-
-        tr:hover {
-            background-color: var(--gray-light);
-        }
-
-        .loader-container {
-            position: absolute;
-            inset: 0;
-            background: rgba(26, 26, 26, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-            border-radius: 8px;
-            transition: all var(--transition-duration) ease;
-        }
-
-        .loader {
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--gray-light);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 0.8s ease-out infinite;
-            position: relative;
-        }
-
-        .loader::before,
-        .loader::after {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-top-color: var(--primary);
-            opacity: 0.5;
-            animation: spin 1.2s linear infinite;
-        }
-
-        .loader::after {
-            inset: -12px;
-            opacity: 0.3;
-            animation-duration: 1.6s;
         }
 
         .stats-loader {
@@ -431,9 +313,85 @@
         }
 
         @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Table */
+        .table-container {
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-light);
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        th {
+            background-color: var(--gray-light);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        tr {
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: rowSlide 0.5s ease forwards;
+        }
+
+        tr:nth-child(1) { animation-delay: 0.1s; }
+        tr:nth-child(2) { animation-delay: 0.15s; }
+        tr:nth-child(3) { animation-delay: 0.2s; }
+        tr:nth-child(4) { animation-delay: 0.25s; }
+        tr:nth-child(5) { animation-delay: 0.3s; }
+        tr:nth-child(6) { animation-delay: 0.35s; }
+        tr:nth-child(7) { animation-delay: 0.4s; }
+        tr:nth-child(8) { animation-delay: 0.45s; }
+        tr:nth-child(9) { animation-delay: 0.5s; }
+        tr:nth-child(10) { animation-delay: 0.55s; }
+
+        @keyframes rowSlide {
             to {
-                transform: rotate(360deg);
+                opacity: 1;
+                transform: translateX(0);
             }
+        }
+
+        tr:hover {
+            background-color: var(--gray-light);
+        }
+
+        .loader-container {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .loader-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--gray-light);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.8s ease-out infinite;
         }
 
         .pagination {
@@ -442,10 +400,13 @@
             align-items: center;
             gap: 0.5rem;
             margin-top: 1rem;
-            padding: 0.5rem;
             opacity: 0;
-            transform: translateY(10px);
-            animation: fadeInUp 0.3 deberreubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+            animation: fadeInUp 0.5s ease 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .pagination button {
@@ -456,14 +417,12 @@
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 0.9rem;
-            position: relative;
-            overflow: hidden;
         }
 
         .pagination button:hover:not(:disabled) {
             background: var(--primary);
             color: var(--dark);
+            transform: scale(1.05);
         }
 
         .pagination button.active {
@@ -476,57 +435,94 @@
             cursor: not-allowed;
         }
 
-        .page-transition-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* Broadcast */
+        .broadcast-container textarea {
             width: 100%;
-            height: 100%;
-            background: var(--dark);
-            z-index: 9999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            padding: 0.5rem;
+            background: var(--gray-light);
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            color: var(--light);
+            margin-bottom: 0.5rem;
+            transition: border-color 0.2s;
         }
 
-        .page-transition-overlay.active {
-            opacity: 1;
-            pointer-events: all;
+        .broadcast-container textarea:focus {
+            outline: none;
+            border-color: var(--primary);
         }
 
-        .broadcast-container {
-            background: var(--gray);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
-            opacity: 0;
+        .broadcast-container button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
         }
 
+        .broadcast-container button:hover {
+            background: #1fa855;
+            transform: scale(1.02);
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .container {
-                padding: 0.5rem;
+            .sidebar {
+                width: 200px;
+                transform: translateX(-100%);
             }
 
-            .header h1 {
-                font-size: 1.5rem;
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
             }
 
             th, td {
                 padding: 0.5rem;
                 font-size: 0.8rem;
             }
-
-            .login-form {
-                padding: 1.5rem;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="page-transition"></div>
-    <div class="page-transition-overlay"></div>
+    <!-- Animated SVG Background -->
+    <svg class="bg-svg" viewBox="0 0 800 200" preserveAspectRatio="none">
+        <path d="M0,100 Q200,50 400,100 T800,100 V200 H0 Z" />
+    </svg>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">Admin Panel</div>
+        <ul class="sidebar-nav">
+            <li class="active" data-page="dashboard">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                Dashboard
+            </li>
+            <li data-page="broadcast">
+                <svg viewBox="0 0 24 24"><path d="M2 12h2v5l4-2h6l4 2v-5h2v-2H2v2zm4-8h12v2H6V4zm0 14h12v2H6v-2z"/></svg>
+                Broadcast
+            </li>
+            <li data-page="history">
+                <svg viewBox="0 0 24 24"><path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42A6.92 6.92 0 0119 12c0 3.87-3.13 7-7 7A6.995 6.995 0 017.58 6.58L6.17 5.17A8.932 8.932 0 003 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-3.36-1.67-6.34-4.17-8.83z"/></svg>
+                History
+            </li>
+        </ul>
+    </div>
+
+    <button class="hamburger" id="hamburger">☰</button>
 
     <div class="login-container" id="loginPage">
         <form class="login-form" id="loginForm">
@@ -544,132 +540,141 @@
         </form>
     </div>
 
-    <div class="container" id="dashboard">
-        <div class="header">
-            <h1>WhatsApp Checker Usage</h1>
-            <p>Track and monitor WhatsApp number verification activities</p>
+    <div class="main-content" id="mainContent">
+        <div class="page" id="dashboard">
+            <h2>Dashboard</h2>
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="number" id="totalUsers"><div class="stats-loader"></div></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Checks</h3>
+                    <div class="number" id="totalChecks"><div class="stats-loader"></div></div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Today</h3>
+                    <div class="number" id="activeToday"><div class="stats-loader"></div></div>
+                </div>
+            </div>
+            <div class="table-container">
+                <h3>Recent History</h3>
+                <div id="dashboardLoader" class="loader-container">
+                    <div class="loader"></div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Timestamp</th>
+                            <th>Number</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboardBody"></tbody>
+                </table>
+                <div class="pagination" id="dashboardPagination"></div W
+            </div>
         </div>
 
-        <div class="stats-container">
-            <div class="stat-card">
-                <h3>Total Users</h3>
-                <div class="number" id="totalUsers"><div class="stats-loader"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>Total Checks</h3>
-                <div class="number" id="totalChecks"><div class="stats-loader"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>Active Today</h3>
-                <div class="number" id="activeToday"><div class="stats-loader"></div></div>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <div id="tableLoader" class="loader-container">
-                <div class="loader"></div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Username</th>
-                        <th>Timestamp</th>
-                        <th>Number</th>
-                        <th>Result</th>
-                    </tr>
-                </thead>
-                <tbody id="usageBody"></tbody>
-            </table>
-            <div class="pagination" id="pagination"></div>
-            <button id="exportData" class="login-button" style="margin-top: 1rem;">Export to CSV</button>
-        </div>
-
-        <div class="broadcast-container">
+        <div class="page" id="broadcast">
             <h2>Broadcast Message</h2>
-            <textarea id="broadcastMessage" placeholder="Enter message to send to all users" rows="4" style="width: 100%; padding: 0.5rem;"></textarea>
-            <button id="sendBroadcast" class="login-button" style="margin-top: 0.5rem;">Send to All Users</button>
-            <div id="broadcastStatus" style="color: var(--primary); margin-top: 0.5rem;"></div>
+            <div class="broadcast-container">
+                <textarea id="broadcastMessage" placeholder="Enter message to send to all users" rows="4"></textarea>
+                <button id="sendBroadcast" class="login-button">Send to All Users</button>
+                <div id="broadcastStatus" style="color: var(--primary); margin-top: 0.5rem;"></div>
+            </div>
+        </div>
+
+        <div class="page" id="history">
+            <h2>Usage History</h2>
+            <div class="table-container">
+                <div id="historyLoader" class="loader-container">
+                    <div class="loader"></div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Timestamp</th>
+                            <th>Number</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+                <div class="pagination" id="historyPagination"></div>
+                <button id="exportData" class="login-button" style="margin-top: 1rem;">Export to CSV</button>
+            </div>
         </div>
     </div>
 
     <script>
         // Binary encoded password (Facai8898@)
         const ENCODED_PASSWORD = '01000110011000010110001101100001011010010011100000111000001110010011100001000000';
-        
+        const ITEMS_PER_PAGE = 10;
+
+        let allData = [];
+        let dashboardPage = 1;
+        let historyPage = 1;
+
         function binaryToText(binary) {
-            return binary.match(/.{8}/g).map(byte => 
-                String.fromCharCode(parseInt(byte, 2))
-            ).join('');
-        }
-
-        function animatePageTransition() {
-            const transition = document.querySelector('.page-transition');
-            transition.classList.add('active');
-            setTimeout(() => {
-                transition.classList.remove('active');
-            }, 1000);
-        }
-
-        function showLoadingState() {
-            const loginForm = document.querySelector('.login-form');
-            const loginButton = document.querySelector('.login-button');
-            loginForm.classList.add('loading');
-            loginButton.classList.add('loading');
-            loginButton.disabled = true;
-        }
-
-        function hideLoadingState() {
-            const loginForm = document.querySelector('.login-form');
-            const loginButton = document.querySelector('.login-button');
-            loginForm.classList.remove('loading');
-            loginButton.classList.remove('loading');
-            loginButton.disabled = false;
+            return binary.match(/.{8}/g).map(byte => String.fromCharCode(parseInt(byte, 2))).join('');
         }
 
         function checkLoginState() {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             if (isLoggedIn === 'true') {
-                showDashboard();
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainContent').style.display = 'block';
                 loadDashboard();
+                showPage('dashboard');
             }
-        }
-
-        async function showDashboard() {
-            animatePageTransition();
-            await new Promise(resolve => setTimeout(resolve, 500));
-            document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('dashboard').classList.add('visible');
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
-            
-            showLoadingState();
-            
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             if (username === 'admin' && password === binaryToText(ENCODED_PASSWORD)) {
                 localStorage.setItem('isLoggedIn', 'true');
-                await showDashboard();
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainContent').style.display = 'block';
                 loadDashboard();
+                showPage('dashboard');
             } else {
-                hideLoadingState();
                 errorMessage.style.display = 'block';
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
+                setTimeout(() => errorMessage.style.display = 'none', 3000);
             }
         });
 
-        const ITEMS_PER_PAGE = 10;
-        let currentPage = 1;
-        let allData = [];
+        // Sidebar Navigation
+        const navItems = document.querySelectorAll('.sidebar-nav li');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                showPage(item.getAttribute('data-page'));
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('active');
+                }
+            });
+        });
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            if (pageId === 'history') loadHistory();
+        }
+
+        // Hamburger Menu
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
 
         function formatDate(date) {
             return new Intl.DateTimeFormat('en-US', {
@@ -680,18 +685,16 @@
             }).format(new Date(date));
         }
 
-        async function displayPage(page) {
-            const tbody = document.getElementById('usageBody');
+        async function displayPage(pageNum, tbodyId, paginationId, data = allData) {
+            const tbody = document.getElementById(tbodyId);
             tbody.innerHTML = '';
-            
-            const start = (page - 1) * ITEMS_PER_PAGE;
+            const start = (pageNum - 1) * ITEMS_PER_PAGE;
             const end = start + ITEMS_PER_PAGE;
-            const pageData = allData.slice(start, end);
+            const pageData = data.slice(start, end);
 
             for (let i = 0; i < pageData.length; i++) {
                 const row = pageData[i];
                 const tr = document.createElement('tr');
-                tr.style.animationDelay = `${i * 0.05}s`;
                 tr.innerHTML = `
                     <td>${row.userId}</td>
                     <td>${row.username}</td>
@@ -700,17 +703,15 @@
                     <td>${row.result}</td>
                 `;
                 tbody.appendChild(tr);
-                await new Promise(resolve => setTimeout(resolve, 50));
             }
 
-            updatePagination();
+            updatePagination(pageNum, paginationId, data);
         }
 
-        function updatePagination() {
-            const pagination = document.getElementById('pagination');
+        function updatePagination(currentPage, paginationId, data = allData) {
+            const pagination = document.getElementById(paginationId);
             pagination.innerHTML = '';
-            
-            const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
+            const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
             const maxPagesToShow = 5;
             const half = Math.floor(maxPagesToShow / 2);
             let startPage = Math.max(1, currentPage - half);
@@ -721,12 +722,13 @@
             }
 
             const prevButton = document.createElement('button');
-            prevButton.textContent = '←';
+            prevButton.textContent = 'Previous';
             prevButton.disabled = currentPage === 1;
             prevButton.onclick = () => {
                 if (currentPage > 1) {
-                    currentPage--;
-                    displayPage(currentPage);
+                    if (paginationId === 'dashboardPagination') dashboardPage--;
+                    else historyPage--;
+                    displayPage(currentPage - 1, paginationId === 'dashboardPagination' ? 'dashboardBody' : 'historyBody', paginationId);
                 }
             };
             pagination.appendChild(prevButton);
@@ -735,8 +737,9 @@
                 const firstButton = document.createElement('button');
                 firstButton.textContent = '1';
                 firstButton.onclick = () => {
-                    currentPage = 1;
-                    displayPage(currentPage);
+                    if (paginationId === 'dashboardPagination') dashboardPage = 1;
+                    else historyPage = 1;
+                    displayPage(1, paginationId === 'dashboardPagination' ? 'dashboardBody' : 'historyBody', paginationId);
                 };
                 pagination.appendChild(firstButton);
                 if (startPage > 2) {
@@ -752,8 +755,9 @@
                 pageButton.textContent = i;
                 pageButton.classList.toggle('active', i === currentPage);
                 pageButton.onclick = () => {
-                    currentPage = i;
-                    displayPage(currentPage);
+                    if (paginationId === 'dashboardPagination') dashboardPage = i;
+                    else historyPage = i;
+                    displayPage(i, paginationId === 'dashboardPagination' ? 'dashboardBody' : 'historyBody', paginationId);
                 };
                 pagination.appendChild(pageButton);
             }
@@ -768,19 +772,21 @@
                 const lastButton = document.createElement('button');
                 lastButton.textContent = totalPages;
                 lastButton.onclick = () => {
-                    currentPage = totalPages;
-                    displayPage(currentPage);
+                    if (paginationId === 'dashboardPagination') dashboardPage = totalPages;
+                    else historyPage = totalPages;
+                    displayPage(totalPages, paginationId === 'dashboardPagination' ? 'dashboardBody' : 'historyBody', paginationId);
                 };
                 pagination.appendChild(lastButton);
             }
 
             const nextButton = document.createElement('button');
-            nextButton.textContent = '→';
+            nextButton.textContent = 'Next';
             nextButton.disabled = currentPage === totalPages;
             nextButton.onclick = () => {
                 if (currentPage < totalPages) {
-                    currentPage++;
-                    displayPage(currentPage);
+                    if (paginationId === 'dashboardPagination') dashboardPage++;
+                    else historyPage++;
+                    displayPage(currentPage + 1, paginationId === 'dashboardPagination' ? 'dashboardBody' : 'historyBody', paginationId);
                 }
             };
             pagination.appendChild(nextButton);
@@ -791,32 +797,31 @@
                 const response = await fetch('/usage');
                 const data = await response.json();
                 allData = data;
-                
+
                 const uniqueUsers = new Set(data.map(row => row.userId)).size;
                 const totalChecks = data.length;
                 const today = new Date().toDateString();
                 const activeToday = new Set(
-                    data.filter(row => new Date(row.timestamp).toDateString() === today)
-                        .map(row => row.userId)
+                    data.filter(row => new Date(row.timestamp).toDateString() === today).map(row => row.userId)
                 ).size;
 
                 animateNumber('totalUsers', uniqueUsers);
                 animateNumber('totalChecks', totalChecks);
                 animateNumber('activeToday', activeToday);
 
-                await displayPage(1);
-
-                const tableLoader = document.getElementById('tableLoader');
-                tableLoader.style.opacity = '0';
-                setTimeout(() => tableLoader.style.display = 'none', 300);
+                await displayPage(dashboardPage, 'dashboardBody', 'dashboardPagination');
+                document.getElementById('dashboardLoader').classList.add('hidden');
             } catch (error) {
                 console.error('Error:', error);
-                const errorMessage = '<div style="color: var(--primary)">Failed to load data</div>';
-                document.getElementById('totalUsers').innerHTML = errorMessage;
-                document.getElementById('totalChecks').innerHTML = errorMessage;
-                document.getElementById('activeToday').innerHTML = errorMessage;
-                document.getElementById('tableLoader').innerHTML = errorMessage;
+                document.getElementById('totalUsers').innerHTML = 'Error';
+                document.getElementById('totalChecks').innerHTML = 'Error';
+                document.getElementById('activeToday').innerHTML = 'Error';
             }
+        }
+
+        async function loadHistory() {
+            await displayPage(historyPage, 'historyBody', 'historyPagination');
+            document.getElementById('historyLoader').classList.add('hidden');
         }
 
         function animateNumber(elementId, finalNumber) {
@@ -883,5 +888,5 @@
 
         checkLoginState();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92dbced46ef0adf4',t:'MTc0NDIyMDYxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
